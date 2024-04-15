@@ -7,3 +7,5 @@ def return_daily_trades(SYMBOL, API_KEY):
     r = requests.get(url)
     data = r.json()
     return data
+
+

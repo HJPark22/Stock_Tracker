@@ -1,1 +1,1 @@
-Hello it's me ! Is this you?
+A personal project meant to analyse stocks.
