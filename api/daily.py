@@ -3,24 +3,26 @@ import json
 import pandas as pd
 import copy
 
-def preprocess_data(read_in):
+
+
+def preprocess_daily_data(read_in):
     ## Use the Read in File
-    stock_data = pd.DataFrame(columns=['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
-    t = read_in['Time Series (Daily)']
+    stock_data = pd.DataFrame(columns=['Open', 'High', 'Low', 'Close', 'Volume'])
+    t = read_in['results']
     for date in t:
 
-        temp = pd.DataFrame({'Date': [date], "Open": [t[date]["1. open"]],\
-                                    "High": [t[date]["2. high"]], "Low": [t[date]["3. low"]],\
-                                    'Close': [t[date]["4. close"]], "Volume": [t[date]["5. volume"]]})
+        temp = pd.DataFrame({"Open": [date["o"]],\
+                                    "High": [date["h"]], "Low": [date["l"]],\
+                                    'Close': [date["c"]], "Volume": [date["v"]]})
         stock_data = pd.concat([stock_data, temp], ignore_index=True)
     return copy.deepcopy(stock_data)
 
 
 
-def return_daily_trades(SYMBOL, API_KEY):
+def return_daily_trades(SYMBOL, API_KEY, START_DATE, END_DATE):
     ### Retrieve data using API
-    url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={SYMBOL}&apikey={API_KEY}'
+    url = f"https://api.polygon.io/v2/aggs/ticker/{SYMBOL}/range/1/day/{START_DATE}/{END_DATE}?adjusted=true&sort=asc&limit=300&apiKey={API_KEY}"
     request = requests.get(url)
     data = request.json()
-    output = preprocess_data(data)
+    output = preprocess_daily_data(data)
     return output
