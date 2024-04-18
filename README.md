@@ -1,1 +1,6 @@
-A personal project meant to analyse stocks.
+
+
+## A personal project meant to analyse stocks.
+
+
+
