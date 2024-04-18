@@ -1,23 +1,21 @@
 from vars.config import API_KEY_AV, API_KEY_P
-from api.daily import return_daily_trades
+from api.daily import return_daily_trades, aggregate_data
 from api.news import symbols_to_api
 from api.news import return_news
 from vars.stocks import one_day_earlier, one_year_earlier
+from test_.backtest import news_START_DATE, news_END_DATE, stock_START_DATE, stock_END_DATE, current_DATE
 import requests
 
-options = ['Daily', 'News']
+#def combine_stocks_news(news):
+
+
+
 
 if __name__ == '__main__':
-    #TSLA = return_daily_trades('TSLA', API_KEY)
-    '''print("Choose an option from below\n----------------------------------------\n")
-    for idx, option in enumerate(options):
-        print(f"Option {idx}: {option}\n")
-    #new = return_news(SYMBOL,)
-    print("Successful")'''
-    sym = 'AAPL'
-    API_KEY_AV = "Z0UT46BYLNOBVIZ3"
-    temp = return_news(sym,API_KEY_AV)
-    print(temp)
-    #data = return_daily_trades('TSLA', API_KEY_P, one_year_earlier, one_day_earlier)
-    #print(data)
-
+    #result = return_news('TSLA', API_KEY_AV)
+    #print(result)
+    temp = return_news('TSLA', API_KEY_AV, news_START_DATE, news_END_DATE)
+    for top_stock in temp:
+        change = aggregate_data(return_daily_trades(top_stock, API_KEY_P, stock_START_DATE, stock_END_DATE))
+        current = return_daily_trades(top_stock, API_KEY_P, current_DATE, current_DATE)
+        print(f"The stock: {top_stock}\nThe past: {change}\nNow: {current}")
