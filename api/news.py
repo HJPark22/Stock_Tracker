@@ -60,7 +60,7 @@ def preprocess_news_data(read_in):
 
     news_data["Score"] = pd.to_numeric(news_data["Score"], errors="coerce")
     final_news_data = aggregate_news_data(news_data)
-    top_stocks = above_threshold(final_news_data, 0.1, 10)
+    top_stocks = above_threshold(final_news_data, 1.0, 5)
 
     return copy.deepcopy(top_stocks)
 
