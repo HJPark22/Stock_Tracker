@@ -2,74 +2,63 @@ from vars.config import API_KEY_AV, API_KEY_P
 from api.daily import return_daily_trades, aggregate_stats
 from api.news import symbols_to_api
 from api.news import return_news
-from vars.stocks import one_day_earlier, one_year_earlier
-from test_.backtest import (
-    news_START_DATE,
-    news_END_DATE,
-    stock_START_DATE,
-    stock_END_DATE,
-    current_DATE,
-)
-import requests
+from vars.file_location import current_csv, past_csv
+from test_.backtest import test_past, test_current
+from utils.helpers import combine_cur_stocks_news, combine_past_stocks_news, return_df
 import pandas as pd
 import numpy as np
-
-
-def combine_stocks_news(SYMBOL, past, current, score):
-    """Combine past and current to create df"""
-    cur = pd.DataFrame(
-        [
-            {
-                "Ticker": SYMBOL,
-                "Score": score,
-                "initial_price": past[0],
-                "hist_change": past[2],
-                "hist_price": past[1],
-                "current_change": current[2],
-                "current_price": current[1],
-                "avg_vol": np.mean([past[3], current[3]]),
-            }
-        ]
-    )
-    return cur
+import os
 
 
 if __name__ == "__main__":
-    SYMBOL = "TSLA"
-    temp = return_news(SYMBOL, API_KEY_AV, news_START_DATE, news_END_DATE)
-    df = pd.DataFrame(
-        columns=[
-            "Ticker",
-            "Score",
-            "initial_price",
-            "hist_change",
-            "hist_price",
-            "current_change",
-            "current_price",
-            "avg_vol",
-        ]
+    SYMBOL = "NVDA"
+    time = test_current(year=2024, month=04, day=20, hour=12, minute=00, diff_days=60)
+    temp = return_news(
+        SYMBOL, API_KEY_AV, time["news_START_DATE"], time["news_END_DATE"]
     )
+    df = return_df(time)
     for top_stock in temp["Ticker"].values:
         if top_stock.isalpha():
-            past = aggregate_stats(
+            current = aggregate_stats(
                 return_daily_trades(
-                    top_stock, API_KEY_P, stock_START_DATE, stock_END_DATE
+                    top_stock, API_KEY_P, time["stock_END_DATE"], time["current_DATE"]
                 )
             )
-            current = aggregate_stats(
-                return_daily_trades(top_stock, API_KEY_P, stock_END_DATE, current_DATE)
-            )
-            df = pd.concat(
-                [
-                    df if not df.empty else None,
-                    combine_stocks_news(
+            if time["Current"]:
+                df = pd.concat(
+                    [
+                        df if not df.empty else None,
+                        combine_cur_stocks_news(
+                            top_stock,
+                            current,
+                            temp[temp.Ticker == top_stock]["Score"].values[0],
+                        ),
+                    ],
+                    ignore_index=True,
+                )
+            else:
+                past = aggregate_stats(
+                    return_daily_trades(
                         top_stock,
-                        past,
-                        current,
-                        temp[temp.Ticker == top_stock]["Score"],
-                    ),
-                ],
-                ignore_index=True,
-            )
-    print(df)
-print(6)
+                        API_KEY_P,
+                        time["stock_START_DATE"],
+                        time["stock_END_DATE"],
+                    )
+                )
+                df = pd.concat(
+                    [
+                        df if not df.empty else None,
+                        combine_past_stocks_news(
+                            top_stock,
+                            past,
+                            current,
+                            temp[temp.Ticker == top_stock]["Score"].values[0],
+                        ),
+                    ],
+                    ignore_index=True,
+                )
+    df.sort_values(by="Score", ascending=False, inplace=True)
+    if os.path.getsize(past_csv):
+        df.to_csv(past_csv, index=False)
+    else:
+        df.to_csv(past_csv, mode="a", index=False, header=False)
