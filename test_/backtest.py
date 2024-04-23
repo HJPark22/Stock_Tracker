@@ -46,4 +46,4 @@ def test_current(year, month, day, hour, minute, diff_days=60):
     d["stock_END_DATE"] = stock_format(past_datetime)
     d["current_DATE"] = stock_format(current_datetime)
     d["Current"] = 1
-    return (d.copy(), True)
+    return d.copy()

@@ -1,6 +1,5 @@
 from vars.config import API_KEY_AV, API_KEY_P
 from api.daily import return_daily_trades, aggregate_stats
-from api.news import symbols_to_api
 from api.news import return_news
 from vars.file_location import current_csv, past_csv
 from test_.backtest import test_past, test_current
@@ -8,57 +7,97 @@ from utils.helpers import combine_cur_stocks_news, combine_past_stocks_news, ret
 import pandas as pd
 import numpy as np
 import os
+from datetime import datetime
 
 
-if __name__ == "__main__":
-    SYMBOL = "NVDA"
-    time = test_current(year=2024, month=04, day=20, hour=12, minute=00, diff_days=60)
-    temp = return_news(
-        SYMBOL, API_KEY_AV, time["news_START_DATE"], time["news_END_DATE"]
+def current(SYMBOL):
+    """Processes for current Stocks with recent news sentiment"""
+    today = datetime.now()
+    year, month, day, hour, minute = (
+        today.year,
+        today.month,
+        today.day,
+        today.hour,
+        today.minute,
     )
-    df = return_df(time)
-    for top_stock in temp["Ticker"].values:
+    time_frame = test_current(year, month, day, hour, minute)
+    news = return_news(
+        SYMBOL, API_KEY_AV, time_frame["news_START_DATE"], time_frame["news_END_DATE"]
+    )
+    df = return_df(time_frame)
+    for top_stock in news["Ticker"].values:
         if top_stock.isalpha():
             current = aggregate_stats(
                 return_daily_trades(
-                    top_stock, API_KEY_P, time["stock_END_DATE"], time["current_DATE"]
+                    top_stock,
+                    API_KEY_P,
+                    time_frame["stock_END_DATE"],
+                    time_frame["current_DATE"],
                 )
             )
-            if time["Current"]:
-                df = pd.concat(
-                    [
-                        df if not df.empty else None,
-                        combine_cur_stocks_news(
-                            top_stock,
-                            current,
-                            temp[temp.Ticker == top_stock]["Score"].values[0],
-                        ),
-                    ],
-                    ignore_index=True,
-                )
-            else:
-                past = aggregate_stats(
-                    return_daily_trades(
+            df = pd.concat(
+                [
+                    df if not df.empty else None,
+                    combine_cur_stocks_news(
                         top_stock,
-                        API_KEY_P,
-                        time["stock_START_DATE"],
-                        time["stock_END_DATE"],
-                    )
+                        current,
+                        news[news.Ticker == top_stock]["Score"].values[0],
+                    ),
+                ],
+                ignore_index=True,
+            )
+    return df.copy()
+
+
+def past(SYMBOL, year, month, day, hour, minute):
+    time_frame = test_past(year, month, day, hour, minute)
+    news = return_news(
+        SYMBOL, API_KEY_AV, time_frame["news_START_DATE"], time_frame["news_END_DATE"]
+    )
+    df = return_df(time_frame)
+    for top_stock in news["Ticker"].values:
+        if top_stock.isalpha():
+            current = aggregate_stats(
+                return_daily_trades(
+                    top_stock,
+                    API_KEY_P,
+                    time_frame["stock_END_DATE"],
+                    time_frame["current_DATE"],
                 )
-                df = pd.concat(
-                    [
-                        df if not df.empty else None,
-                        combine_past_stocks_news(
-                            top_stock,
-                            past,
-                            current,
-                            temp[temp.Ticker == top_stock]["Score"].values[0],
-                        ),
-                    ],
-                    ignore_index=True,
+            )
+            past = aggregate_stats(
+                return_daily_trades(
+                    top_stock,
+                    API_KEY_P,
+                    time_frame["stock_START_DATE"],
+                    time_frame["stock_END_DATE"],
                 )
+            )
+            df = pd.concat(
+                [
+                    df if not df.empty else None,
+                    combine_past_stocks_news(
+                        top_stock,
+                        past,
+                        current,
+                        news[news.Ticker == top_stock]["Score"].values[0],
+                    ),
+                ],
+                ignore_index=True,
+            )
+    return df.copy()
+
+
+if __name__ == "__main__":
+    #df = current("SOUN")
+    df = past("META", 2023, 6, 15, 12, 0)
     df.sort_values(by="Score", ascending=False, inplace=True)
-    if os.path.getsize(past_csv):
-        df.to_csv(past_csv, index=False)
-    else:
-        df.to_csv(past_csv, mode="a", index=False, header=False)
+    if not df.empty:
+        if "initial_price" in df.columns.values:
+            save_file = past_csv
+        else:
+            save_file = current_csv
+        if os.path.getsize(save_file) == 0:
+            df.to_csv(save_file, index=False)
+        else:
+            df.to_csv(save_file, mode="a", index=False, header=False)
