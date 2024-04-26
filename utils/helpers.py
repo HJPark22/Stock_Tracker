@@ -12,6 +12,16 @@ def create_cur_df():
             "current_change",
             "current_price",
             "avg_vol",
+            "roe_avg",
+            "roe_trend",
+            "roic_avg",
+            "roic_trend",
+            "earningsYield_avg",
+            "earningsYield_trend",
+            "freeCashFlowYield_avg",
+            "freeCashFlowYield_trend",
+            "debtToEquity_avg",
+            "debtToEquity_trend",
         ]
     )
     return df.copy()
@@ -52,7 +62,7 @@ def combine_past_stocks_news(SYMBOL, past, current, score):
     return cur
 
 
-def combine_cur_stocks_news(SYMBOL, current, score):
+def combine_cur_stocks_news(SYMBOL, current, metrics, score):
     """Combine current to create df"""
     cur = pd.DataFrame(
         [
@@ -63,6 +73,16 @@ def combine_cur_stocks_news(SYMBOL, current, score):
                 "current_change": round(current[2], 3),
                 "current_price": current[1],
                 "avg_vol": round(current[3], 0),
+                "roe_avg": round(metrics["roe_avg"], 2),
+                "roe_trend": round(metrics["roe_trend"], 2),
+                "roic_avg": round(metrics["roic_avg"], 2),
+                "roic_trend": round(metrics["roic_trend"], 2),
+                "earningsYield_avg": round(metrics["earningsYield_avg"], 2),
+                "earningsYield_trend": round(metrics["earningsYield_trend"], 2),
+                "freeCashFlowYield_avg": round(metrics["freeCashFlowYield_avg"], 2),
+                "freeCashFlowYield_trend": round(metrics["freeCashFlowYield_trend"], 2),
+                "debtToEquity_avg": round(metrics["debtToEquity_avg"], 2),
+                "debtToEquity_trend": round(metrics["debtToEquity_trend"], 2),
             }
         ]
     )
@@ -75,4 +95,3 @@ def return_df(time_object):
     else:
         df = create_past_df()
     return df.copy()
-

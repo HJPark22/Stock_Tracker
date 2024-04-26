@@ -6,8 +6,6 @@ import copy
 '''"sentiment_score_definition": "x <= -0.35: Bearish; -0.35 < x <= -0.15: Somewhat-Bearish;
  -0.15 < x < 0.15: Neutral; 0.15 <= x < 0.35: Somewhat_Bullish; x >= 0.35: Bullish"'''
 
-SYMBOLS = ["TSLA", "AAPL"]
-
 
 # Need to fix this error
 def symbols_to_api(SYMBOLS):
@@ -60,15 +58,15 @@ def preprocess_news_data(read_in):
 
     news_data["Score"] = pd.to_numeric(news_data["Score"], errors="coerce")
     final_news_data = aggregate_news_data(news_data)
-    top_stocks = above_threshold(final_news_data, -3, 5)
+    top_stocks = above_threshold(final_news_data, 0.15, 3)
 
     return copy.deepcopy(top_stocks)
 
 
-def return_news(SYMBOLS, API_KEY, TIME_FROM, TIME_TO):
+def return_news(SYMBOLS, TOPICS, API_KEY, TIME_FROM, TIME_TO):
     """Retrieve data using API"""
-
     url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={SYMBOLS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
+    # url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics={TOPICS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
     r = requests.get(url)
     data = r.json()
     output = preprocess_news_data(data)

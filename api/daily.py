@@ -16,8 +16,8 @@ def return_data(SYMBOL, API_KEY, START_DATE, END_DATE):
 
 def aggregate_stats(df):
     """Use to aggregate statistics"""
-    open_diff = (df.loc[len(df) - 1, "Open"] - df.loc[0, "Open"]) / df.loc[0, "Open"]
-    avg_vol = df["Volume"].mean()
+    open_diff = np.mean(np.gradient(df.loc[:, "Open"]))
+    avg_vol = np.mean(df["Volume"])
     latest_price = df.loc[len(df) - 1, "Open"]
     initial_price = df.loc[0, "Open"]
     return (initial_price, latest_price, open_diff, avg_vol)
@@ -47,8 +47,9 @@ def preprocess_daily_data(read_in):
 def return_daily_trades(SYMBOL, API_KEY, START_DATE, END_DATE):
     data = return_data(SYMBOL, API_KEY, START_DATE, END_DATE)
     output = preprocess_daily_data(data)
+    final_output = aggregate_stats(output)
     time.sleep(15)
-    return output
+    return final_output
 
 
 # def return_past(df, SYMBOL):
