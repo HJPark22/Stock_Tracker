@@ -17,12 +17,12 @@ def stock_format(datetime_object):
     return datetime_object.strftime("%Y-%m-%d")
 
 
-def test_past(year, month, day, hour, minute, diff_days=1000):
+def test_past(year, month, day, hour, minute, days_back=1000, days_forward=365):
     current_datetime = datetime(
         year=year, month=month, day=day, hour=hour, minute=minute
     )
-    future_datetime = current_datetime + timedelta(days=diff_days)
-    past_datetime = current_datetime - timedelta(days=diff_days)
+    future_datetime = current_datetime + timedelta(days=days_back)
+    past_datetime = current_datetime - timedelta(days=days_forward)
 
     d = {}
     d["news_START_DATE"] = news_format(current_datetime - timedelta(days=10))
@@ -41,7 +41,7 @@ def test_current(year, month, day, hour, minute, diff_days=1000):
     past_datetime = current_datetime - timedelta(days=diff_days)
 
     d = {}
-    d["news_START_DATE"] = news_format(current_datetime - timedelta(days=10))
+    d["news_START_DATE"] = news_format(current_datetime - timedelta(days=30))
     d["news_END_DATE"] = news_format(current_datetime)
     d["stock_END_DATE"] = stock_format(past_datetime)
     d["current_DATE"] = stock_format(current_datetime)

@@ -58,15 +58,15 @@ def preprocess_news_data(read_in):
 
     news_data["Score"] = pd.to_numeric(news_data["Score"], errors="coerce")
     final_news_data = aggregate_news_data(news_data)
-    top_stocks = above_threshold(final_news_data, 0.15, 3)
+    top_stocks = above_threshold(final_news_data, -1, 1)
 
     return copy.deepcopy(top_stocks)
 
 
 def return_news(SYMBOLS, TOPICS, API_KEY, TIME_FROM, TIME_TO):
     """Retrieve data using API"""
-    url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={SYMBOLS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
-    # url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics={TOPICS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
+    # url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={SYMBOLS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
+    url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics={TOPICS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
     r = requests.get(url)
     data = r.json()
     output = preprocess_news_data(data)

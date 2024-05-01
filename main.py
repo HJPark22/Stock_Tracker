@@ -1,5 +1,5 @@
 from vars.config import API_KEY_AV, API_KEY_P, API_KEY_FMP
-from api.daily import return_daily_trades, aggregate_stats
+from api.daily import return_daily_trades
 from api.news import return_news
 from api.metrics import return_metrics
 from vars.file_location import current_csv, past_csv
@@ -61,30 +61,38 @@ def current(SYMBOL, TOPIC):
     return df.copy()
 
 
-def past(SYMBOL, year, month, day, hour, minute):
+def past(SYMBOL, TOPIC, year, month, day, hour, minute):
+    """Processes for past stocks with past news sentiment"""
     time_frame = test_past(year, month, day, hour, minute)
+    print(f"Currently processing {TOPIC}..............")
     news = return_news(
-        SYMBOL, API_KEY_AV, time_frame["news_START_DATE"], time_frame["news_END_DATE"]
+        SYMBOL,
+        TOPIC,
+        API_KEY_AV,
+        time_frame["news_START_DATE"],
+        time_frame["news_END_DATE"],
     )
     df = return_df(time_frame)
     for top_stock in news["Ticker"].values:
-        if top_stock.isalpha():
-            current = aggregate_stats(
-                return_daily_trades(
+        if (top_stock.isalpha()) and (top_stock not in seen):
+            print(f"Currently processing {top_stock}...........")
+            try:
+                metrics = return_metrics(API_KEY_FMP, top_stock)
+                current = return_daily_trades(
                     top_stock,
                     API_KEY_P,
                     time_frame["stock_END_DATE"],
                     time_frame["current_DATE"],
                 )
-            )
-            past = aggregate_stats(
-                return_daily_trades(
+                past = return_daily_trades(
                     top_stock,
                     API_KEY_P,
                     time_frame["stock_START_DATE"],
                     time_frame["stock_END_DATE"],
                 )
-            )
+            except:
+                print(f"daily not available for {top_stock}")
+                continue
             df = pd.concat(
                 [
                     df if not df.empty else None,
@@ -92,26 +100,37 @@ def past(SYMBOL, year, month, day, hour, minute):
                         top_stock,
                         past,
                         current,
+                        metrics,
                         news[news.Ticker == top_stock]["Score"].values[0],
                     ),
                 ],
                 ignore_index=True,
             )
+            seen.add(top_stock)
     return df.copy()
 
 
 if __name__ == "__main__":
-    # TOPICS = ["energy_transportation", "technology", "life_sciences"]
-    # for topic in TOPICS:
-    df = current("LIN", "")
-    # df = past("META", 2023, 6, 15, 12, 0)
-    df.sort_values(by="Score", ascending=False, inplace=True)
-    if not df.empty:
-        if "initial_price" in df.columns.values:
-            save_file = past_csv
-        else:
-            save_file = current_csv
-        if os.path.getsize(save_file) == 0:
-            df.to_csv(save_file, index=False)
-        else:
-            df.to_csv(save_file, mode="a", index=False, header=False)
+    TOPICS = [
+        # "technology",
+        # "finance",
+        "life_sciences",
+        # "economy_monetary",
+        # "economy_macro",
+        "energy_transportation",
+        # "mergers_and_acquisitions",
+    ]
+    seen = set(pd.read_csv("data/stocks_past.csv")["Ticker"].values)
+    for topic in TOPICS:
+        df = past("", topic, 2022, 6, 15, 12, 0)
+        # df = past("META", 2023, 6, 15, 12, 0)
+        df.sort_values(by="Score", ascending=False, inplace=True)
+        if not df.empty:
+            if "initial_price" in df.columns.values:
+                save_file = past_csv
+            else:
+                save_file = current_csv
+            if os.path.getsize(save_file) == 0:
+                df.to_csv(save_file, index=False)
+            else:
+                df.to_csv(save_file, mode="a", index=False, header=False)
