@@ -65,8 +65,10 @@ def preprocess_news_data(read_in):
 
 def return_news(SYMBOLS, TOPICS, API_KEY, TIME_FROM, TIME_TO):
     """Retrieve data using API"""
-    # url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={SYMBOLS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
-    url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics={TOPICS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
+    if SYMBOLS:
+        url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={SYMBOLS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
+    elif TOPICS:
+        url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics={TOPICS}&apikey={API_KEY}&sort=RELEVANCE&limit=1000&time_from={TIME_FROM}&time_to={TIME_TO}"
     r = requests.get(url)
     data = r.json()
     output = preprocess_news_data(data)

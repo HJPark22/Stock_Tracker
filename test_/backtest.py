@@ -25,7 +25,7 @@ def test_past(year, month, day, hour, minute, days_back=1000, days_forward=365):
     past_datetime = current_datetime - timedelta(days=days_forward)
 
     d = {}
-    d["news_START_DATE"] = news_format(current_datetime - timedelta(days=10))
+    d["news_START_DATE"] = news_format(current_datetime - timedelta(days=30))
     d["news_END_DATE"] = news_format(current_datetime)
     d["stock_START_DATE"] = stock_format(past_datetime)
     d["stock_END_DATE"] = stock_format(current_datetime)

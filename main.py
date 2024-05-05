@@ -4,7 +4,12 @@ from api.news import return_news
 from api.metrics import return_metrics
 from vars.file_location import current_csv, past_csv
 from test_.backtest import test_past, test_current
-from utils.helpers import combine_cur_stocks_news, combine_past_stocks_news, return_df
+from utils.helpers import (
+    combine_cur_stocks_news,
+    combine_past_stocks_news,
+    return_df,
+    save_to_csv,
+)
 import pandas as pd
 import numpy as np
 import os
@@ -114,23 +119,21 @@ if __name__ == "__main__":
     TOPICS = [
         # "technology",
         # "finance",
-        "life_sciences",
+        # "life_sciences",
         # "economy_monetary",
         # "economy_macro",
-        "energy_transportation",
+        # "energy_transportation",
         # "mergers_and_acquisitions",
+        "retail_wholesale",
+        "real_estate",
     ]
+    SYMBOLS = []
     seen = set(pd.read_csv("data/stocks_past.csv")["Ticker"].values)
-    for topic in TOPICS:
-        df = past("", topic, 2022, 6, 15, 12, 0)
-        # df = past("META", 2023, 6, 15, 12, 0)
-        df.sort_values(by="Score", ascending=False, inplace=True)
-        if not df.empty:
-            if "initial_price" in df.columns.values:
-                save_file = past_csv
-            else:
-                save_file = current_csv
-            if os.path.getsize(save_file) == 0:
-                df.to_csv(save_file, index=False)
-            else:
-                df.to_csv(save_file, mode="a", index=False, header=False)
+    if SYMBOLS:
+        for symbol in SYMBOLS:
+            df = past(symbol, "", 2022, 6, 15, 12, 0)
+            save_to_csv(df)
+    else:
+        for topic in TOPICS:
+            df = past("", topic, 2022, 6, 15, 12, 0)
+            save_to_csv(df)

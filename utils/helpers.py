@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import os
-
+past_csv = "data/stocks_past.csv"
+current_csv = "data/stocks_current.csv"
 
 def create_cur_df():
     df = pd.DataFrame(
@@ -115,3 +116,17 @@ def return_df(time_object):
     else:
         df = create_past_df()
     return df.copy()
+
+
+def save_to_csv(df):
+    df.sort_values(by="Score", ascending=False, inplace=True)
+    if not df.empty:
+        if "initial_price" in df.columns.values:
+            save_file = past_csv
+        else:
+            save_file = current_csv
+        if os.path.getsize(save_file) == 0:
+            df.to_csv(save_file, index=False)
+        else:
+            df.to_csv(save_file, mode="a", index=False, header=False)
+    return
