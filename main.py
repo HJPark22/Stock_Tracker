@@ -69,7 +69,8 @@ def current(SYMBOL, TOPIC):
 def past(SYMBOL, TOPIC, year, month, day, hour, minute):
     """Processes for past stocks with past news sentiment"""
     time_frame = test_past(year, month, day, hour, minute)
-    print(f"Currently processing {TOPIC}..............")
+    if TOPIC:
+        print(f"Currently processing {TOPIC}..............")
     news = return_news(
         SYMBOL,
         TOPIC,
@@ -95,45 +96,50 @@ def past(SYMBOL, TOPIC, year, month, day, hour, minute):
                     time_frame["stock_START_DATE"],
                     time_frame["stock_END_DATE"],
                 )
+                df = pd.concat(
+                    [
+                        df if not df.empty else None,
+                        combine_past_stocks_news(
+                            top_stock,
+                            past,
+                            current,
+                            metrics,
+                            news[news.Ticker == top_stock]["Score"].values[0],
+                        ),
+                    ],
+                    ignore_index=True,
+                )
+                seen.add(top_stock)
             except:
                 print(f"daily not available for {top_stock}")
                 continue
-            df = pd.concat(
-                [
-                    df if not df.empty else None,
-                    combine_past_stocks_news(
-                        top_stock,
-                        past,
-                        current,
-                        metrics,
-                        news[news.Ticker == top_stock]["Score"].values[0],
-                    ),
-                ],
-                ignore_index=True,
-            )
-            seen.add(top_stock)
     return df.copy()
 
 
 if __name__ == "__main__":
     TOPICS = [
-        # "technology",
-        # "finance",
-        # "life_sciences",
+        "technology",
+        "finance",
+        "life_sciences",
         # "economy_monetary",
         # "economy_macro",
         # "energy_transportation",
         # "mergers_and_acquisitions",
-        "retail_wholesale",
-        "real_estate",
+        # "retail_wholesale",
+        # "real_estate",
     ]
     SYMBOLS = []
     seen = set(pd.read_csv("data/stocks_past.csv")["Ticker"].values)
     if SYMBOLS:
         for symbol in SYMBOLS:
-            df = past(symbol, "", 2022, 6, 15, 12, 0)
-            save_to_csv(df)
+            if symbol not in seen:
+                try:
+                    print(f"Analyzing stocks related to {symbol}")
+                    df = past(symbol, "", 2022, 6, 15, 12, 0)
+                    save_to_csv(df)
+                except:
+                    save_to_csv(df)
     else:
         for topic in TOPICS:
-            df = past("", topic, 2022, 6, 15, 12, 0)
+            df = past("", topic, 2022, 10, 15, 12, 0)
             save_to_csv(df)

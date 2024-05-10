@@ -38,7 +38,7 @@ def preprocess_news_data(read_in):
     """Preprocess news data"""
 
     news_data = pd.DataFrame(columns=["Ticker", "Score", "Label"])
-
+    
     articles = read_in["feed"]
 
     for article in articles:
